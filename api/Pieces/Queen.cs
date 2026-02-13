@@ -7,6 +7,11 @@ namespace ChessApi.Pieces
 {
     public class Queen(bool Color) : IPieceCanPin
     {
+        private static readonly int[] PressureColInc = { 0, 0, 1, -1, -1, -1, 1, 1 };
+        private static readonly int[] PressureRowInc = { 1, -1, 0, 0, 1, -1, -1, 1 };
+        private static readonly string HashKeyBlack = "q0";
+        private static readonly string HashKeyWhite = "q1";
+
         public bool Color { get; set; } = Color;
         public Direction PinnedDir { get; set; } = Direction.None;
         public int[,] WhiteValues { get; } =
@@ -19,7 +24,7 @@ namespace ChessApi.Pieces
                 { 0, 0, 5, 5, 5, 5, 0, -5 },
                 { -10, 5, 5, 5, 5, 5, 0, -10 },
                 { -10, 0, 5, 0, 0, 0, 0, -10 },
-                { -20, -10, -10, -5, -5, -10, -10, -20 }
+                { -20, -10, -10, -5, -5, -10, -10, -20 },
             };
 
         public int[,] BlackValues { get; } =
@@ -32,7 +37,7 @@ namespace ChessApi.Pieces
                 { -5, 0, 5, 5, 5, 5, 0, -5 },
                 { -10, 0, 5, 5, 5, 5, 0, -10 },
                 { -10, 0, 0, 0, 0, 0, 0, -10 },
-                { -20, -10, -10, -5, -5, -10, -10, -20 }
+                { -20, -10, -10, -5, -5, -10, -10, -20 },
             };
         public int Value { get; } = 900;
 
@@ -68,7 +73,7 @@ namespace ChessApi.Pieces
                                 {
                                     MoveTo = [col, row],
                                     MoveFrom = [coords[0], coords[1]],
-                                    MovingPiece = this
+                                    MovingPiece = this,
                                 }
                             );
                         }
@@ -84,7 +89,7 @@ namespace ChessApi.Pieces
                                     MoveTo = [col, row],
                                     MoveFrom = [coords[0], coords[1]],
                                     CapturedPiece = board.Rows[col].Squares[row].Piece,
-                                    MovingPiece = this
+                                    MovingPiece = this,
                                 }
                             );
                         }
@@ -110,34 +115,32 @@ namespace ChessApi.Pieces
 
             int col = coords[0];
             int row = coords[1];
-            int[] colInc = { 0, 0, 1, -1, -1, -1, 1, 1 };
-            int[] rowInc = { 1, -1, 0, 0, 1, -1, -1, 1 };
 
             for (int i = 0; i < 8; i++, col = coords[0], row = coords[1])
             {
-                col += colInc[i];
-                row += rowInc[i];
+                col += PressureColInc[i];
+                row += PressureRowInc[i];
 
                 while (PieceHelper.IsInBoard(col, row))
                 {
-                    moves.Add(new int[] { col, row });
+                    moves.Add(board.Rows[col].Squares[row].Coords);
 
                     if (board.Rows[col].Squares[row].Piece is not null)
                     {
                         if (board.Rows[col].Squares[row].Piece is King)
                         {
-                            col += colInc[i];
-                            row += rowInc[i];
-                            if (col >= 0 && row >= 0 && col < 8 && row < 8)
+                            col += PressureColInc[i];
+                            row += PressureRowInc[i];
+                            if (PieceHelper.IsInBoard(col, row))
                             {
-                                moves.Add(new int[] { col, row });
+                                moves.Add(board.Rows[col].Squares[row].Coords);
                             }
                         }
                         break;
                     }
 
-                    col += colInc[i];
-                    row += rowInc[i];
+                    col += PressureColInc[i];
+                    row += PressureRowInc[i];
                 }
             }
 
@@ -192,7 +195,7 @@ namespace ChessApi.Pieces
 
         public string GetHashKey()
         {
-            return $"q{(Color ? 0 : 1)}";
+            return Color ? HashKeyBlack : HashKeyWhite;
         }
 
         public override string ToString()

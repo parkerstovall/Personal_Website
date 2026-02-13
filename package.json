@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A personal website to showcase my various apps and projects",
   "scripts": {
-    "start": "npm run start:app & npm run start:db",
+    "start": "concurrently \"npm run start:app\" \"npm run start:db\"",
     "start:db": "docker compose -f Docker/MongoDB.yml up",
     "start:app": "concurrently \"cd api && dotnet run\" \"cd client && npm run dev\"",
     "build:css": "cd client && npm run build:css",

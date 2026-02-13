@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -7,6 +6,10 @@
     <UserSecretsId>72d330e5-ff85-454f-9170-2be2738c8c11</UserSecretsId>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ChessApi.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
@@ -20,12 +23,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <None Include="appsettings.json" CopyToPublishDirectory="Always" />
-    
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="dotnet tool restore" /> 
+    <Exec Command="dotnet tool restore" />
     <Exec Command="dotnet swagger tofile --output swagger.json $(OutputPath)$(AssemblyName).dll v1" />
     <Exec Command="$(NSwagExe_Net90) openapi2tsclient /clientBaseClass:IncludeCredentials /extensionCode:../client/src/api/IncludeCredentials.ts /input:swagger.json /output:../client/src/api/GeneratedAPI.ts /className:GeneratedAPI /typeStyle:Interface /useTransformOptionsMethod:true" />
   </Target>
-
 </Project>

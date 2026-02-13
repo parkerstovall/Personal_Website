@@ -15,16 +15,15 @@ namespace ChessApi.Models.API
 
         public BoardSquare Copy()
         {
-            BoardSquare copy =
-                new()
-                {
-                    Piece = Piece?.Copy(),
-                    Coords = [Coords[0], Coords[1]],
-                    CheckBlockingColor = CheckBlockingColor,
-                    BlackPressure = BlackPressure,
-                    WhitePressure = WhitePressure,
-                    EnPassantColor = EnPassantColor
-                };
+            BoardSquare copy = new()
+            {
+                Piece = Piece?.Copy(),
+                Coords = Coords,
+                CheckBlockingColor = CheckBlockingColor,
+                BlackPressure = BlackPressure,
+                WhitePressure = WhitePressure,
+                EnPassantColor = EnPassantColor,
+            };
             return copy;
         }
     }

@@ -6,6 +6,9 @@ namespace ChessApi.Pieces
 {
     public class Pawn(bool Color) : IPieceDirectAttacker, IPieceHasMoved
     {
+        private static readonly string HashKeyBlack = "p0";
+        private static readonly string HashKeyWhite = "p1";
+
         public bool HasMoved { get; set; } = false;
         public bool Color { get; set; } = Color;
         public Direction PinnedDir { get; set; } = Direction.None;
@@ -13,14 +16,14 @@ namespace ChessApi.Pieces
         public int[,] WhiteValues { get; } =
             new int[,]
             {
-                { 0, 0, 0, 0, 0, 0, 0, 0, },
+                { 0, 0, 0, 0, 0, 0, 0, 0 },
                 { 50, 50, 50, 50, 50, 50, 50, 50 },
                 { 10, 10, 20, 30, 30, 20, 10, 10 },
                 { 5, 5, 10, 25, 25, 10, 5, 5 },
                 { 0, 0, 0, 20, 20, 0, 0, 0 },
                 { 5, -5, -10, 0, 0, -10, -5, 5 },
                 { 5, 10, 10, -20, -20, 10, 10, 5 },
-                { 0, 0, 0, 0, 0, 0, 0, 0 }
+                { 0, 0, 0, 0, 0, 0, 0, 0 },
             };
 
         public int[,] BlackValues { get; } =
@@ -33,7 +36,7 @@ namespace ChessApi.Pieces
                 { 5, 5, 10, 25, 25, 10, 5, 5 },
                 { 10, 10, 20, 30, 30, 20, 10, 10 },
                 { 50, 50, 50, 50, 50, 50, 50, 50 },
-                { 0, 0, 0, 0, 0, 0, 0, 0, },
+                { 0, 0, 0, 0, 0, 0, 0, 0 },
             };
 
         public int Value { get; } = 100;
@@ -77,7 +80,7 @@ namespace ChessApi.Pieces
                             {
                                 MoveTo = [col, row],
                                 MoveFrom = [coords[0], coords[1]],
-                                MovingPiece = this
+                                MovingPiece = this,
                             }
                         );
                     }
@@ -99,7 +102,7 @@ namespace ChessApi.Pieces
                                 {
                                     MoveTo = [col, row],
                                     MoveFrom = [coords[0], coords[1]],
-                                    MovingPiece = this
+                                    MovingPiece = this,
                                 }
                             );
                         }
@@ -124,11 +127,15 @@ namespace ChessApi.Pieces
                             if (!check || left.CheckBlockingColor == this.Color)
                             {
                                 var capturedPiece = left.Piece;
-                                var capturedFrom = new int[] { left.Coords[0], left.Coords[1] };
+                                int[]? capturedFrom;
                                 if (left.EnPassantColor.HasValue)
                                 {
-                                    capturedFrom[0] -= dir;
+                                    capturedFrom = [left.Coords[0] - dir, left.Coords[1]];
                                     capturedPiece = board.Rows[col - dir].Squares[row].Piece;
+                                }
+                                else
+                                {
+                                    capturedFrom = left.Coords;
                                 }
 
                                 moves.Add(
@@ -138,7 +145,7 @@ namespace ChessApi.Pieces
                                         MoveFrom = [coords[0], coords[1]],
                                         MovingPiece = this,
                                         CapturedPiece = capturedPiece,
-                                        CapturedMoveFromOverride = capturedFrom
+                                        CapturedMoveFromOverride = capturedFrom,
                                     }
                                 );
                             }
@@ -161,11 +168,15 @@ namespace ChessApi.Pieces
                             if (!check || right.CheckBlockingColor == this.Color)
                             {
                                 var capturedPiece = right.Piece;
-                                var capturedFrom = new int[] { right.Coords[0], right.Coords[1] };
+                                int[]? capturedFrom;
                                 if (right.EnPassantColor.HasValue)
                                 {
-                                    capturedFrom[0] -= dir;
+                                    capturedFrom = [right.Coords[0] - dir, right.Coords[1]];
                                     capturedPiece = board.Rows[col - dir].Squares[row].Piece;
+                                }
+                                else
+                                {
+                                    capturedFrom = right.Coords;
                                 }
 
                                 moves.Add(
@@ -175,7 +186,7 @@ namespace ChessApi.Pieces
                                         MoveFrom = [coords[0], coords[1]],
                                         MovingPiece = this,
                                         CapturedPiece = capturedPiece,
-                                        CapturedMoveFromOverride = capturedFrom
+                                        CapturedMoveFromOverride = capturedFrom,
                                     }
                                 );
                             }
@@ -216,14 +227,17 @@ namespace ChessApi.Pieces
 
         public IPiece Copy()
         {
-            Pawn newPiece =
-                new(this.Color) { HasMoved = this.HasMoved, PinnedDir = this.PinnedDir };
+            Pawn newPiece = new(this.Color)
+            {
+                HasMoved = this.HasMoved,
+                PinnedDir = this.PinnedDir,
+            };
             return newPiece;
         }
 
         public string GetHashKey()
         {
-            return $"p{(Color ? 0 : 1)}";
+            return Color ? HashKeyBlack : HashKeyWhite;
         }
 
         public override string ToString()

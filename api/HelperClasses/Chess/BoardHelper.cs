@@ -19,7 +19,7 @@ namespace ChessApi.HelperClasses.Chess
                 "King",
                 "Bishop",
                 "Knight",
-                "Rook"
+                "Rook",
             };
 
             bool whitePiece = false;
@@ -127,7 +127,7 @@ namespace ChessApi.HelperClasses.Chess
             {
                 Row = square.Coords[0],
                 Col = square.Coords[1],
-                CssClass = cssClass
+                CssClass = cssClass,
             };
         }
 

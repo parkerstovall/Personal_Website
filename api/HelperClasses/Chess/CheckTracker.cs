@@ -35,7 +35,15 @@ namespace ChessApi.HelperClasses.Chess
 
         public List<BoardSquare> GetKingAttackers(bool color)
         {
-            return [.. Attackers.Where((a) => a.Piece?.Color != color)];
+            var result = new List<BoardSquare>(Attackers.Count);
+            foreach (var a in Attackers)
+            {
+                if (a.Piece?.Color != color)
+                {
+                    result.Add(a);
+                }
+            }
+            return result;
         }
 
         public void AddAttacker(BoardSquare attacker)

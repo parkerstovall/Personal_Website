@@ -13,12 +13,12 @@ namespace ChessApi.Models.API
         {
             get
             {
-                if (MovingPiece is Pawn && (MoveTo[0] != 1 || MoveTo[0] != 6))
+                if (MovingPiece is Pawn)
                 {
-                    return true;
+                    return MoveFrom[0] != 1 && MoveFrom[0] != 6;
                 }
 
-                return MoveTo[0] != 0 || MoveTo[0] != 7;
+                return MoveFrom[0] != 0 && MoveFrom[0] != 7;
             }
         }
         public required IPiece MovingPiece { get; set; }

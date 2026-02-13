@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Chess AI API",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/Debug/net8.0/ChessApi.dll",
+      "cwd": "${workspaceFolder}/src/YourApp",
+      "launchSettingsFilePath": "${workspaceFolder}/src/ChessApi/Properties/launchSettings.json",
+      "launchSettingsProfile": "https"
+    }
+  ]
+}

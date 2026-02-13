@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Collections.Concurrent;
 using ChessApi.Models.API;
 using ChessApi.Models.DB;
 using ChessApi.Pieces;
@@ -32,7 +32,7 @@ namespace ChessApi.HelperClasses.Chess
         ///  A higher value will result in a more thorough search but will also increase computation time.
         ///  If it is set to -1, the engine will increase the max depth based on the number of possible moves.
         /// </summary>
-        public int MaxDepth { get; set; } = 4;
+        public int MaxDepth { get; set; } = 10;
 
         /// <summary>
         ///  The maximum time (in milliseconds) the engine will spend searching for a move.
@@ -65,9 +65,10 @@ namespace ChessApi.HelperClasses.Chess
         private readonly long[,,] PositionHashes;
         private bool StopThinking = false;
         private readonly System.Timers.Timer timer = new();
-        private readonly Hashtable Transpositions = [];
-        private readonly Dictionary<string, byte> PieceHashKeys =
-            new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<long, int> Transpositions = new();
+        private readonly Dictionary<string, byte> PieceHashKeys = new(
+            StringComparer.OrdinalIgnoreCase
+        );
 
         public MinMaxEngine(MinMaxEngineOptions options)
         {
@@ -160,15 +161,14 @@ namespace ChessApi.HelperClasses.Chess
                 throw new Exception("No suitable moves found.");
             }
 
-            Move foundMove =
-                new()
-                {
-                    GameID = game.GameID,
-                    From = [move.MoveFrom[0], move.MoveFrom[1]],
-                    To = [move.MoveTo[0], move.MoveTo[1]],
-                    PieceColor = move.MovingPiece.Color,
-                    PieceType = move.MovingPiece.GetType().Name
-                };
+            Move foundMove = new()
+            {
+                GameID = game.GameID,
+                From = [move.MoveFrom[0], move.MoveFrom[1]],
+                To = [move.MoveTo[0], move.MoveTo[1]],
+                PieceColor = move.MovingPiece.Color,
+                PieceType = move.MovingPiece.GetType().Name,
+            };
 
             return foundMove;
         }
@@ -258,15 +258,14 @@ namespace ChessApi.HelperClasses.Chess
                 }
             );
 
-            Move foundMove =
-                new()
-                {
-                    GameID = game.GameID,
-                    From = [threadResources.Move.MoveFrom[0], threadResources.Move.MoveFrom[1]],
-                    To = [threadResources.Move.MoveTo[0], threadResources.Move.MoveTo[1]],
-                    PieceColor = threadResources.Move.MovingPiece.Color,
-                    PieceType = threadResources.Move.MovingPiece.GetType().Name
-                };
+            Move foundMove = new()
+            {
+                GameID = game.GameID,
+                From = [threadResources.Move.MoveFrom[0], threadResources.Move.MoveFrom[1]],
+                To = [threadResources.Move.MoveTo[0], threadResources.Move.MoveTo[1]],
+                PieceColor = threadResources.Move.MovingPiece.Color,
+                PieceType = threadResources.Move.MovingPiece.GetType().Name,
+            };
 
             return foundMove;
         }
@@ -274,24 +273,15 @@ namespace ChessApi.HelperClasses.Chess
         private int MinMax(Game game, bool isMax, int depth, int alpha, int beta, long boardHash)
         {
             var color = isMax ? Max_Player : !Max_Player;
-            if (
-                Transpositions.ContainsKey(boardHash) && Transpositions[boardHash] is int boardScore
-            )
+            if (Transpositions.TryGetValue(boardHash, out int boardScore))
             {
                 return boardScore;
             }
-            else if (depth == Max_Depth || StopThinking)
+
+            if (depth == Max_Depth || StopThinking)
             {
                 boardScore = GetBoardScore(game.Board);
-
-                lock (Transpositions)
-                {
-                    if (!Transpositions.ContainsKey(boardHash))
-                    {
-                        Transpositions.Add(boardHash, boardScore);
-                    }
-                }
-
+                Transpositions.TryAdd(boardHash, boardScore);
                 return boardScore;
             }
 
@@ -368,13 +358,7 @@ namespace ChessApi.HelperClasses.Chess
                 }
             }
 
-            lock (Transpositions)
-            {
-                if (!Transpositions.ContainsKey(boardHash))
-                {
-                    Transpositions.Add(boardHash, score);
-                }
-            }
+            Transpositions.TryAdd(boardHash, score);
 
             return score;
         }
@@ -427,37 +411,37 @@ namespace ChessApi.HelperClasses.Chess
             return newGame;
         }
 
-        public List<PossibleMove> OrderPossibleMoves(List<PossibleMove> possibleMoves)
+        public void OrderPossibleMoves(List<PossibleMove> possibleMoves)
         {
-            var orderedMoves = new List<PossibleMove>();
+            possibleMoves.Sort(
+                (a, b) =>
+                {
+                    // Captures first, sorted descending by captured piece value
+                    bool aCapture = a.CapturedPiece is not null;
+                    bool bCapture = b.CapturedPiece is not null;
 
-            orderedMoves.AddRange(
-                possibleMoves
-                    .Where(p => p.CapturedPiece is not null)
-                    .OrderBy(p => p.CapturedPiece?.Value)
-            );
-
-            orderedMoves.AddRange(
-                possibleMoves
-                    .Where(p => p.CapturedPiece is null)
-                    .OrderBy(p =>
+                    if (aCapture && bCapture)
                     {
-                        // Pieces that have already moved should be prioritized
-                        if (p.HasMoved)
-                        {
-                            return p.MovingPiece.Value + 1;
-                        }
+                        return (b.CapturedPiece?.Value ?? 0).CompareTo(a.CapturedPiece?.Value ?? 0);
+                    }
 
-                        return p.MovingPiece.Value;
-                    })
+                    if (aCapture != bCapture)
+                    {
+                        return aCapture ? -1 : 1;
+                    }
+
+                    // Non-captures: prioritize pieces that have already moved
+                    int aVal = a.HasMoved ? a.MovingPiece.Value + 1 : a.MovingPiece.Value;
+                    int bVal = b.HasMoved ? b.MovingPiece.Value + 1 : b.MovingPiece.Value;
+                    return aVal.CompareTo(bVal);
+                }
             );
-
-            return orderedMoves;
         }
 
         private void GeneratePositionHashes()
         {
             Random rand = new();
+            HashSet<long> usedHashes = new();
             for (var i = 0; i < 8; i++)
             {
                 for (var j = 0; j < 8; j++)
@@ -468,8 +452,8 @@ namespace ChessApi.HelperClasses.Chess
 
                         do
                         {
-                            value = NextLong(rand);
-                        } while (!ValidateHashPosition(PositionHashes, value));
+                            value = rand.NextInt64(0, long.MaxValue);
+                        } while (!usedHashes.Add(value));
 
                         PositionHashes[i, j, item.Value] = value;
                     }
@@ -594,39 +578,6 @@ namespace ChessApi.HelperClasses.Chess
             }
 
             return tempBoardHash;
-        }
-
-        private static bool ValidateHashPosition(long[,,] hashes, long hashValue)
-        {
-            for (var i = 0; i < hashes.GetLength(0); i++)
-            {
-                for (var j = 0; j < hashes.GetLength(1); j++)
-                {
-                    for (var k = 0; k < hashes.GetLength(2); k++)
-                    {
-                        if (hashes[i, j, k] == hashValue)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        private static long NextLong(Random random)
-        {
-            byte[] longBuf = new byte[sizeof(long)];
-            long longValue;
-
-            do
-            {
-                random.NextBytes(longBuf);
-                longValue = BitConverter.ToInt64(longBuf) & long.MaxValue;
-            } while (longValue == long.MaxValue);
-
-            return longValue;
         }
     }
 }

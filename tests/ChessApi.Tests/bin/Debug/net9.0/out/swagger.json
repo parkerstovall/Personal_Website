@@ -1,0 +1,239 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ChessApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/v1/game/tryGetSavedGame": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedGameResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedGameResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedGameResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/startGame": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "parameters": [
+          {
+            "name": "isWhite",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isTwoPlayer",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/compMove": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardDisplay"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/game/click": {
+      "post": {
+        "tags": [
+          "Board"
+        ],
+        "parameters": [
+          {
+            "name": "row",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "col",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClickReturn"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClickReturn"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClickReturn"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BoardDisplay": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardDisplayRow"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BoardDisplayRow": {
+        "type": "object",
+        "properties": {
+          "squares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BoardDisplaySquare"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BoardDisplaySquare": {
+        "type": "object",
+        "properties": {
+          "col": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "row": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cssClass": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClickReturn": {
+        "required": [
+          "board",
+          "moved"
+        ],
+        "type": "object",
+        "properties": {
+          "board": {
+            "$ref": "#/components/schemas/BoardDisplay"
+          },
+          "moved": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SavedGameResult": {
+        "type": "object",
+        "properties": {
+          "boardDisplay": {
+            "$ref": "#/components/schemas/BoardDisplay"
+          },
+          "isPlayerWhite": {
+            "type": "boolean"
+          },
+          "isTwoPlayer": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

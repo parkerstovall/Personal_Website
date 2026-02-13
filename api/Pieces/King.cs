@@ -6,6 +6,11 @@ namespace ChessApi.Pieces
 {
     public class King(bool Color) : IPieceHasMoved
     {
+        private static readonly int[] KingColInc = { 0, 0, 1, -1, 1, -1, 1, -1 };
+        private static readonly int[] KingRowInc = { 1, -1, 0, 0, 1, -1, -1, 1 };
+        private static readonly string HashKeyBlack = "k0";
+        private static readonly string HashKeyWhite = "k1";
+
         public bool Color { get; set; } = Color;
         public bool HasMoved { get; set; } = false;
         public bool InCheck { get; set; } = false;
@@ -22,7 +27,7 @@ namespace ChessApi.Pieces
                 { -20, -30, -30, -40, -40, -30, -30, -20 },
                 { -10, -20, -20, -20, -20, -20, -20, -10 },
                 { 20, 20, 0, 0, 0, 0, 20, 20 },
-                { 20, 30, 10, 0, 0, 10, 30, 20 }
+                { 20, 30, 10, 0, 0, 10, 30, 20 },
             };
 
         public int[,] BlackValues { get; } =
@@ -35,7 +40,7 @@ namespace ChessApi.Pieces
                 { -30, -40, -40, -50, -50, -40, -40, -30 },
                 { -30, -40, -40, -50, -50, -40, -40, -30 },
                 { -30, -40, -40, -50, -50, -40, -40, -30 },
-                { -30, -40, -40, -50, -50, -40, -40, -30 }
+                { -30, -40, -40, -50, -50, -40, -40, -30 },
             };
         public int Value { get; } = 20000;
 
@@ -45,13 +50,11 @@ namespace ChessApi.Pieces
 
             int col = coords[0];
             int row = coords[1];
-            int[] colInc = [0, 0, 1, -1, 1, -1, 1, -1];
-            int[] rowInc = [1, -1, 0, -0, 1, -1, -1, 1];
 
             for (int i = 0; i < 8; i++, col = coords[0], row = coords[1])
             {
-                col += colInc[i];
-                row += rowInc[i];
+                col += KingColInc[i];
+                row += KingRowInc[i];
 
                 if (PieceHelper.IsInBoard(col, row))
                 {
@@ -67,7 +70,7 @@ namespace ChessApi.Pieces
                                 MoveTo = [col, row],
                                 MoveFrom = [coords[0], coords[1]],
                                 MovingPiece = this,
-                                CapturedPiece = square.Piece
+                                CapturedPiece = square.Piece,
                             }
                         );
                     }
@@ -84,17 +87,15 @@ namespace ChessApi.Pieces
             List<int[]> moves = new();
             int col = coords[0];
             int row = coords[1];
-            int[] colInc = { 0, 0, 1, -1, 1, -1, 1, -1 };
-            int[] rowInc = { 1, -1, 0, -0, 1, -1, -1, 1 };
 
             for (int i = 0; i < 8; i++, col = coords[0], row = coords[1])
             {
-                col += colInc[i];
-                row += rowInc[i];
+                col += KingColInc[i];
+                row += KingRowInc[i];
 
                 if (PieceHelper.IsInBoard(col, row))
                 {
-                    moves.Add([col, row]);
+                    moves.Add(board.Rows[col].Squares[row].Coords);
                 }
             }
 
@@ -190,19 +191,18 @@ namespace ChessApi.Pieces
 
         public string GetHashKey()
         {
-            return $"k{(Color ? 0 : 1)}";
+            return Color ? HashKeyBlack : HashKeyWhite;
         }
 
         public IPiece Copy()
         {
-            King newPiece =
-                new(this.Color)
-                {
-                    PinnedDir = this.PinnedDir,
-                    InCheck = this.InCheck,
-                    InCheckMate = this.InCheckMate,
-                    HasMoved = this.HasMoved
-                };
+            King newPiece = new(this.Color)
+            {
+                PinnedDir = this.PinnedDir,
+                InCheck = this.InCheck,
+                InCheckMate = this.InCheckMate,
+                HasMoved = this.HasMoved,
+            };
             return newPiece;
         }
     }

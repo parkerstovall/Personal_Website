@@ -30,6 +30,6 @@ namespace ChessApi.Models.DB
         Expired,
         CheckMateWhite,
         CheckMateBlack,
-        UserEnded
+        UserEnded,
     }
 }

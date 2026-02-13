@@ -163,9 +163,19 @@ namespace ChessApi.HelperClasses.Chess
 
         private static void CastleKing(int[] start, int[] dest, ref Game game)
         {
-            int[] rookStart = { start[0], start[1] > dest[1] ? 0 : 7 };
-            int[] rookDest = { start[0], start[1] > dest[1] ? 3 : 5 };
-            MovePiece(rookStart, rookDest, ref game);
+            int rookStartCol = start[1] > dest[1] ? 0 : 7;
+            int rookDestCol = start[1] > dest[1] ? 3 : 5;
+
+            BoardSquare rookFrom = game.Board.Rows[start[0]].Squares[rookStartCol];
+            BoardSquare rookTo = game.Board.Rows[start[0]].Squares[rookDestCol];
+
+            rookTo.Piece = rookFrom.Piece;
+            rookFrom.Piece = null;
+
+            if (rookTo.Piece is IPieceHasMoved pieceHasMoved)
+            {
+                pieceHasMoved.HasMoved = true;
+            }
         }
 
         private static CheckTracker RefreshBoard(ref Game game)

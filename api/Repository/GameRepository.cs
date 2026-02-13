@@ -24,7 +24,7 @@ namespace api.repository
                 {
                     BoardDisplay = BoardHelper.GetBoardForDisplay(game),
                     IsPlayerWhite = game.IsPlayerWhite,
-                    IsTwoPlayer = game.IsTwoPlayer
+                    IsTwoPlayer = game.IsTwoPlayer,
                 };
             }
 
@@ -38,7 +38,7 @@ namespace api.repository
             {
                 Board = BoardHelper.GetNewBoard(),
                 IsPlayerWhite = isWhite,
-                IsTwoPlayer = isTwoPlayer
+                IsTwoPlayer = isTwoPlayer,
             };
 
             // Add cookie to response, save game to DB
@@ -77,7 +77,7 @@ namespace api.repository
                             From = game.SelectedSquare,
                             To = clickedSquare,
                             PieceColor = piece.Color,
-                            PieceType = piece.GetType().Name
+                            PieceType = piece.GetType().Name,
                         }
                     );
                 }
@@ -99,7 +99,7 @@ namespace api.repository
                 [
                     .. MoveHelper
                         .GetMovesFromPiece(game.Board, clickedSquare, game.CheckedColor)
-                        .Select(p => p.MoveTo)
+                        .Select(p => p.MoveTo),
                 ];
                 game.SelectedSquare = clickedSquare;
             }
@@ -135,8 +135,8 @@ namespace api.repository
                     "b1",
                     "q1",
                     "k1",
-                    "p1"
-                ]
+                    "p1",
+                ],
             };
             MinMaxEngine ai = new(options);
             var foundMove = ai.GetMove(game);

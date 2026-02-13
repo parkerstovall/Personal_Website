@@ -7,6 +7,32 @@ namespace ChessApi.HelperClasses.Chess
 {
     internal static class PieceHelper
     {
+        private static readonly int[] EmptyInc = Array.Empty<int>();
+
+        // Diagonal directions
+        private static readonly int[] DiagColTLBR = { 1, -1 };
+        private static readonly int[] DiagRowTLBR = { 1, -1 };
+        private static readonly int[] DiagColBLTR = { -1, 1 };
+        private static readonly int[] DiagRowBLTR = { 1, -1 };
+
+        // Straight directions
+        private static readonly int[] StraightColTBBT = { -1, 1 };
+        private static readonly int[] StraightRowTBBT = { 0, 0 };
+        private static readonly int[] StraightColLRRL = { 0, 0 };
+        private static readonly int[] StraightRowLRRL = { -1, 1 };
+
+        // Combined (diag + straight = queen/king)
+        private static readonly int[] DiagStraightCol = { -1, -1, 1, 1, -1, 1, 0, 0 };
+        private static readonly int[] DiagStraightRow = { 1, -1, -1, 1, 0, 0, -1, 1 };
+
+        // Diag only (bishop)
+        private static readonly int[] DiagOnlyCol = { -1, -1, 1, 1 };
+        private static readonly int[] DiagOnlyRow = { 1, -1, -1, 1 };
+
+        // Straight only (rook)
+        private static readonly int[] StraightOnlyCol = { -1, 1, 0, 0 };
+        private static readonly int[] StraightOnlyRow = { 0, 0, -1, 1 };
+
         internal static bool IsInBoard(int col, int row)
         {
             return col > -1 && col < 8 && row > -1 && row < 8;
@@ -74,111 +100,90 @@ namespace ChessApi.HelperClasses.Chess
             bool straight
         )
         {
-            int[] colInc = Array.Empty<int>();
-            int[] rowInc = Array.Empty<int>();
-
             if (
                 diag && PinnedDir == Direction.FromTopLeftToBottomRight
                 || PinnedDir == Direction.FromBottomRightToTopLeft
             )
             {
-                colInc = new int[] { 1, -1 };
-                rowInc = new int[] { 1, -1 };
+                return Tuple.Create(DiagColTLBR, DiagRowTLBR);
             }
-            else if (
+
+            if (
                 diag && PinnedDir == Direction.FromBottomLeftToTopRight
                 || PinnedDir == Direction.FromTopRightToBottomLeft
             )
             {
-                colInc = new int[] { -1, 1 };
-                rowInc = new int[] { 1, -1 };
+                return Tuple.Create(DiagColBLTR, DiagRowBLTR);
             }
-            else if (
+
+            if (
                 straight && PinnedDir == Direction.FromTopToBottom
                 || PinnedDir == Direction.FromBottomToTop
             )
             {
-                colInc = new int[] { -1, 1 };
-                rowInc = new int[] { 0, 0 };
+                return Tuple.Create(StraightColTBBT, StraightRowTBBT);
             }
-            else if (
+
+            if (
                 straight && PinnedDir == Direction.FromLeftToRight
                 || PinnedDir == Direction.FromRightToLeft
             )
             {
-                colInc = new int[] { 0, 0 };
-                rowInc = new int[] { -1, 1 };
+                return Tuple.Create(StraightColLRRL, StraightRowLRRL);
             }
-            else if (PinnedDir == Direction.None)
+
+            if (PinnedDir == Direction.None)
             {
                 if (diag && straight)
                 {
-                    colInc = new int[] { -1, -1, 1, 1, -1, 1, 0, 0 };
-                    rowInc = new int[] { 1, -1, -1, 1, 0, 0, -1, 1 };
+                    return Tuple.Create(DiagStraightCol, DiagStraightRow);
                 }
-                else if (diag)
+
+                if (diag)
                 {
-                    colInc = new int[] { -1, -1, 1, 1 };
-                    rowInc = new int[] { 1, -1, -1, 1 };
+                    return Tuple.Create(DiagOnlyCol, DiagOnlyRow);
                 }
-                else if (straight)
+
+                if (straight)
                 {
-                    colInc = new int[] { -1, 1, 0, 0 };
-                    rowInc = new int[] { 0, 0, -1, 1 };
+                    return Tuple.Create(StraightOnlyCol, StraightOnlyRow);
                 }
             }
 
-            return Tuple.Create(colInc, rowInc);
+            return Tuple.Create(EmptyInc, EmptyInc);
         }
+
+        private static readonly int[] IncTLBR = { 1, 1 };
+        private static readonly int[] IncTRBL = { 1, -1 };
+        private static readonly int[] IncBRTL = { -1, -1 };
+        private static readonly int[] IncBLTR = { -1, 1 };
+        private static readonly int[] IncLR = { 0, 1 };
+        private static readonly int[] IncRL = { 0, -1 };
+        private static readonly int[] IncTB = { 1, 0 };
+        private static readonly int[] IncBT = { -1, 0 };
+        private static readonly int[] IncNone = { 0, 0 };
 
         internal static int[] GetSingleIncrement(Direction dir)
         {
-            int[] inc = new int[2];
-
-            switch (dir)
+            return dir switch
             {
-                case Direction.FromTopLeftToBottomRight:
-                    inc[0] = 1;
-                    inc[1] = 1;
-                    break;
-                case Direction.FromTopRightToBottomLeft:
-                    inc[0] = 1;
-                    inc[1] = -1;
-                    break;
-                case Direction.FromBottomRightToTopLeft:
-                    inc[0] = -1;
-                    inc[1] = -1;
-                    break;
-                case Direction.FromBottomLeftToTopRight:
-                    inc[0] = -1;
-                    inc[1] = 1;
-                    break;
-                case Direction.FromLeftToRight:
-                    inc[0] = 0;
-                    inc[1] = 1;
-                    break;
-                case Direction.FromRightToLeft:
-                    inc[0] = 0;
-                    inc[1] = -1;
-                    break;
-                case Direction.FromTopToBottom:
-                    inc[0] = 1;
-                    inc[1] = 0;
-                    break;
-                case Direction.FromBottomToTop:
-                    inc[0] = -1;
-                    inc[1] = 0;
-                    break;
-            }
-
-            return inc;
+                Direction.FromTopLeftToBottomRight => IncTLBR,
+                Direction.FromTopRightToBottomLeft => IncTRBL,
+                Direction.FromBottomRightToTopLeft => IncBRTL,
+                Direction.FromBottomLeftToTopRight => IncBLTR,
+                Direction.FromLeftToRight => IncLR,
+                Direction.FromRightToLeft => IncRL,
+                Direction.FromTopToBottom => IncTB,
+                Direction.FromBottomToTop => IncBT,
+                _ => IncNone,
+            };
         }
 
         public static void SetPins(int[] start, int[] inc, Direction dir, bool color, ref Game game)
         {
             start[0] += inc[0];
             start[1] += inc[1];
-            List<IPiece> pieces = new();
+            IPiece? candidate = null;
             while (IsInBoard(start[0], start[1]))
             {
                 BoardSquare square = game.Board.Rows[start[0]].Squares[start[1]];
@@ -189,21 +194,22 @@ namespace ChessApi.HelperClasses.Chess
                         break;
                     }
 
-                    pieces.Add(square.Piece);
-
-                    if (pieces.Count > 1)
+                    if (candidate is not null)
                     {
-                        break;
+                        // Second enemy piece found — no pin
+                        return;
                     }
+
+                    candidate = square.Piece;
                 }
 
                 start[0] += inc[0];
                 start[1] += inc[1];
             }
 
-            if (pieces.Count == 1)
+            if (candidate is not null)
             {
-                pieces[0].PinnedDir = dir;
+                candidate.PinnedDir = dir;
             }
         }
 

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace ChessApi.Models.API
 {
     public class Board
@@ -6,14 +8,14 @@ namespace ChessApi.Models.API
 
         public override string ToString()
         {
-            string board = "";
+            var sb = new StringBuilder(Rows.Count * 17); // ~17 chars per row
             foreach (BoardRow row in Rows)
             {
                 foreach (BoardSquare square in row.Squares)
                 {
                     if (square.Piece is null)
                     {
-                        board += "0";
+                        sb.Append("0 ");
                     }
                     else
                     {
@@ -23,13 +25,13 @@ namespace ChessApi.Models.API
                             type = "n";
                         }
 
-                        board += !square.Piece.Color ? type.ToUpper()[0] : type.ToLower()[0];
+                        sb.Append(!square.Piece.Color ? type.ToUpper()[0] : type.ToLower()[0]);
+                        sb.Append(' ');
                     }
-                    board += " ";
                 }
-                board += "\n";
+                sb.Append('\n');
             }
-            return board;
+            return sb.ToString();
         }
     }
 }

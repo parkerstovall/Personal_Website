@@ -7,6 +7,11 @@ namespace ChessApi.Pieces
 {
     public class Rook(bool Color) : IPieceCanPin, IPieceHasMoved
     {
+        private static readonly int[] PressureColInc = { 0, 0, 1, -1 };
+        private static readonly int[] PressureRowInc = { 1, -1, 0, 0 };
+        private static readonly string HashKeyBlack = "r0";
+        private static readonly string HashKeyWhite = "r1";
+
         public bool Color { get; set; } = Color;
         public bool HasMoved { get; set; } = false;
         public Direction PinnedDir { get; set; } = Direction.None;
@@ -20,7 +25,7 @@ namespace ChessApi.Pieces
                 { -5, 0, 0, 0, 0, 0, 0, -5 },
                 { -5, 0, 0, 0, 0, 0, 0, -5 },
                 { -5, 0, 0, 0, 0, 0, 0, -5 },
-                { 0, 0, 0, 5, 5, 0, 0, 0 }
+                { 0, 0, 0, 5, 5, 0, 0, 0 },
             };
 
         public int[,] BlackValues { get; } =
@@ -33,7 +38,7 @@ namespace ChessApi.Pieces
                 { -5, 0, 0, 0, 0, 0, 0, -5 },
                 { -5, 0, 0, 0, 0, 0, 0, -5 },
                 { 5, 10, 10, 10, 10, 10, 10, 5 },
-                { 0, 0, 0, 0, 0, 0, 0, 0 }
+                { 0, 0, 0, 0, 0, 0, 0, 0 },
             };
         public int Value { get; } = 500;
 
@@ -69,7 +74,7 @@ namespace ChessApi.Pieces
                                 {
                                     MoveTo = [col, row],
                                     MoveFrom = [coords[0], coords[1]],
-                                    MovingPiece = this
+                                    MovingPiece = this,
                                 }
                             );
                         }
@@ -85,7 +90,7 @@ namespace ChessApi.Pieces
                                     MoveTo = [col, row],
                                     MoveFrom = [coords[0], coords[1]],
                                     CapturedPiece = board.Rows[col].Squares[row].Piece,
-                                    MovingPiece = this
+                                    MovingPiece = this,
                                 }
                             );
                         }
@@ -110,35 +115,33 @@ namespace ChessApi.Pieces
 
             int col = coords[0];
             int row = coords[1];
-            int[] colInc = { 0, 0, 1, -1 };
-            int[] rowInc = { 1, -1, 0, 0 };
 
             for (int i = 0; i < 4; i++, col = coords[0], row = coords[1])
             {
-                col += colInc[i];
-                row += rowInc[i];
+                col += PressureColInc[i];
+                row += PressureRowInc[i];
 
                 while (PieceHelper.IsInBoard(col, row))
                 {
-                    moves.Add(new int[] { col, row });
+                    moves.Add(board.Rows[col].Squares[row].Coords);
 
                     if (board.Rows[col].Squares[row].Piece is not null)
                     {
                         if (board.Rows[col].Squares[row].Piece is King)
                         {
-                            col += colInc[i];
-                            row += rowInc[i];
-                            if (col >= 0 && row >= 0 && col < 8 && row < 8)
+                            col += PressureColInc[i];
+                            row += PressureRowInc[i];
+                            if (PieceHelper.IsInBoard(col, row))
                             {
-                                moves.Add(new int[] { col, row });
+                                moves.Add(board.Rows[col].Squares[row].Coords);
                             }
                         }
 
                         break;
                     }
 
-                    col += colInc[i];
-                    row += rowInc[i];
+                    col += PressureColInc[i];
+                    row += PressureRowInc[i];
                 }
             }
 
@@ -190,14 +193,17 @@ namespace ChessApi.Pieces
 
         public IPiece Copy()
         {
-            Rook newPiece =
-                new(this.Color) { PinnedDir = this.PinnedDir, HasMoved = this.HasMoved };
+            Rook newPiece = new(this.Color)
+            {
+                PinnedDir = this.PinnedDir,
+                HasMoved = this.HasMoved,
+            };
             return newPiece;
         }
 
         public string GetHashKey()
         {
-            return $"r{(Color ? 0 : 1)}";
+            return Color ? HashKeyBlack : HashKeyWhite;
         }
 
         public override string ToString()

@@ -10,6 +10,6 @@ namespace ChessApi.HelperClasses.Chess
         FromBottomRightToTopLeft,
         FromTopRightToBottomLeft,
         FromBottomLeftToTopRight,
-        None
+        None,
     }
 }
