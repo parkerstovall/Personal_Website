@@ -1,5 +1,5 @@
-**/api/obj/
-**/api/bin/
+obj/
+bin/
 **/client/build
 **/.vscode/
 .DS_Store
